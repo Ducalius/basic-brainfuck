@@ -32,42 +32,42 @@ int main( int argc, char *argv[] ){
     char *buffer;
     long numbytes;
 
-    /* open an existing file for reading */
+	//open file
     infile = fopen(argv[1], "r");
 
-    /* quit if the file does not exist */
+	//if file not exists 
     if(infile == NULL){
         perror("File error");
         puts("Usage: brainfuck [filename]");
         exit(EXIT_FAILURE);
     }
-    /* Get the number of bytes */
+	
+	//get number of bytes
     fseek(infile, 0L, SEEK_END);
     numbytes = ftell(infile);
-
-    /* reset the file position indicator to
-    the beginning of the file */
+	
+    // set to beginning of the file 
     fseek(infile, 0L, SEEK_SET);
 
-    /* grab sufficient memory for the
-    buffer to hold the text */
+	//alloc memory for file text 
     buffer = (char*)calloc(numbytes, sizeof(char));
 
-    /* memory error */
+	//alloc error
     if(buffer == NULL)
         return 1;
 
-    /* copy all the text into the buffer */
+	//read file contents
     fread(buffer, sizeof(char), numbytes, infile);
     fclose(infile);
     numbytes = (int)numbytes;
 
-
+	//init memory
     int carriage = 0;
     char mem[MAXCELLS];
     memset(mem, 0, sizeof(mem));
     int loops = 0;
 
+	// count number of loops
     struct Br_counter b_count;
     for(int i = 0; i < (int)numbytes; i++){
         if(buffer[i] == '[')
@@ -76,16 +76,19 @@ int main( int argc, char *argv[] ){
             b_count.close_br++;
     }
 
+	//if braces not balanced
     if(!br_is_balanced(b_count)){
         errno = "Braces not balanced";
         fprintf(stderr, "Syntax error: %s", errno);
         exit(EXIT_FAILURE);
     }
 
+	//make loop stack
     Stack* loop_stack = make_new_stack(b_count.open_br);
 
     struct Br_counter b_local;
 
+	//main loop
     for(int pointer = 0; pointer < (int)numbytes; pointer++){
         switch(buffer[pointer]){
         case '+':
@@ -128,9 +131,9 @@ int main( int argc, char *argv[] ){
             break;
         case ']':
             if(mem[carriage]!=0){
-                //pointer = loop_stack->arr[loop_stack->top];
+
                 pointer = stack_pop(loop_stack);
-                //printf("Pushed pointer is %d\n", pointer);
+				
                 stack_push(loop_stack, pointer);
             }
             if(mem[carriage]==0){
